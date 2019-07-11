@@ -228,12 +228,13 @@ int main(int argc, char* argv[])
 		printf("Calloc failed to allocate memory for board.cells!\n");
 		exit(MEMORY_ALLOCATION_ERROR);
 	}
-	for (int i = 0; i < board.columns; i++)
+	for (unsigned int i = 0; i < board.columns; i++)
 	{
 		board.cells[i] = calloc(board.rows, sizeof(struct Color)); 
 		if (!board.cells[i])
 		{
-			for (int j = 0; j < i; j++)
+			// freeing allocated memory prior to the failure
+			for (unsigned int j = 0; j < i; j++)
 			{
 				free(board.cells[j]);
 			}
@@ -259,7 +260,7 @@ int main(int argc, char* argv[])
 	}
 
 	// freeing 2d array
-	for (int i = 0; i < board.columns; i++)
+	for (unsigned int i = 0; i < board.columns; i++)
 	{
 		free(board.cells[i]);
 	}
