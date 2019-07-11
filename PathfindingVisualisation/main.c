@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <SDL.h>
+#include <time.h>
+#include <inttypes.h>
 
 #include "errors.h"
 
@@ -184,14 +186,20 @@ struct Color
 	Uint8 a;
 };
 
+struct Color WHITE = { 255, 255, 255, 255 };
+struct Color BLACK = { 0, 0, 0, 255 };
+struct Color RED = { 255, 0, 0, 255 };
+struct Color GREEN = { 0, 255, 0, 255 };
+struct Color BLUE = { 0, 0, 255, 255 };
+
 
 struct {
 	unsigned int columns;
 	unsigned int rows;
 	struct Color** cells;
 } board = {
-	5,
-	10,
+	100,
+	100,
 	NULL
 };
 
@@ -204,11 +212,36 @@ int main(int argc, char* argv[])
 
 	SDL_SetRenderDrawColor(App.screen.renderer, 0, 0, 0, 255);
 
-	// TODO fix the buffer overrun
-	board.cells = malloc(sizeof(struct Color*) * board.columns);
+	// sets up randomisation based on time.
+	// Avoid use for cryptography!
+	srand(time(NULL)); // initialization. must only be called once!
+
+	/* 
+	- notice: calloc handles overflow :D 
+	- a way to check for overflow manually (if using malloc) 
+	       is: if(x > T_MAX / y) where x, y are dimensions and T_MAX is type max.
+	- note: always check that calloc actually succeeded!
+	*/
+	board.cells = calloc(board.columns, sizeof(struct Color*));
+	if (!board.cells)
+	{
+		printf("Calloc failed to allocate memory for board.cells!\n");
+		exit(MEMORY_ALLOCATION_ERROR);
+	}
 	for (int i = 0; i < board.columns; i++)
 	{
-		board.cells[i] = malloc(sizeof(struct Color) * board.rows);
+		board.cells[i] = calloc(board.rows, sizeof(struct Color)); 
+		if (!board.cells[i])
+		{
+			for (int j = 0; j < i; j++)
+			{
+				free(board.cells[j]);
+			}
+			free(board.cells);
+
+			printf("Calloc failed to allocate memory for board[%d].cells!\n", i);
+			exit(MEMORY_ALLOCATION_ERROR);
+		}
 	}
 
 	while (App.running)
@@ -225,7 +258,11 @@ int main(int argc, char* argv[])
 		SDL_RenderPresent(App.screen.renderer);
 	}
 
-	// TODO fix this free to actually free the multi dimensional data
+	// freeing 2d array
+	for (int i = 0; i < board.columns; i++)
+	{
+		free(board.cells[i]);
+	}
 	free(board.cells);
 
 	App.quit();
