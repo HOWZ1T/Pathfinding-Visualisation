@@ -5,9 +5,10 @@
 #include <inttypes.h>
 
 #include "errors.h"
+#include "math_utils.h"
 
-#define SCREEN_W 640
-#define SCREEN_H 480
+#define SCREEN_W 800
+#define SCREEN_H 600
 #define SCREEN_SCALE 1
 #define SCREEN_NAME "Prototype"
 
@@ -113,71 +114,6 @@ void handle_events(SDL_Event* event_ptr)
 	}
 }
 
-// renders the play grid
-void render_grid(SDL_Renderer* renderer, int line_thickness, int columns, int rows, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
-{
-	int cell_width = App.screen.width / columns;
-	int cell_height = App.screen.height / rows;
-
-	// stores original drawing color
-	Uint8 or , og, ob, oa;
-	int result = SDL_GetRenderDrawColor(renderer, &or , &og, &ob, &oa);
-
-	// setting up the draw color for the current drawing process
-	SDL_SetRenderDrawColor(renderer, r, g, b, a);
-
-	if (result != 0)
-	{
-		printf("SDL_Error -> %s\n", SDL_GetError());
-		exit(ERROR);
-	}
-
-	for (unsigned int x = 0; x < App.screen.width; x++)
-	{
-		for (unsigned int y = 0; y < App.screen.height; y++)
-		{
-			if (x % cell_width == 0)
-			{
-				for (int i = 0; i < line_thickness; i++)
-				{
-					if ((x + i) >= App.screen.width) // ensures we don't try to draw over the screen
-					{
-						break;
-					}
-
-					int result = SDL_RenderDrawPoint(renderer, x + i, y);
-					if (result != 0)
-					{
-						printf("SDL_Error -> %s\n", SDL_GetError());
-						exit(ERROR);
-					}
-				}
-			}
-
-			if (y % cell_height == 0)
-			{
-				for (int i = 0; i < line_thickness; i++)
-				{
-					if ((y + i) >= App.screen.height) // ensures we don't try to draw over the screen
-					{
-						break;
-					}
-
-					int result = SDL_RenderDrawPoint(renderer, x, y + i);
-					if (result != 0)
-					{
-						printf("SDL_Error -> %s\n", SDL_GetError());
-						exit(ERROR);
-					}
-				}
-			}
-		}
-	}
-
-	// reset the renderer's draw color
-	SDL_SetRenderDrawColor(renderer, or , og, ob, oa);
-}
-
 struct Color
 {
 	Uint8 r;
@@ -198,10 +134,102 @@ struct {
 	unsigned int rows;
 	struct Color** cells;
 } board = {
-	100,
-	100,
+	4,
+	4,
 	NULL
 };
+
+// renders the play grid
+void render_grid(SDL_Renderer* renderer, int line_thickness, struct Color color)
+{
+	int cell_width = App.screen.width / board.columns;
+	int cell_height = App.screen.height / board.rows;
+
+	// stores original drawing color
+	Uint8 or , og, ob, oa;
+	int result = SDL_GetRenderDrawColor(renderer, &or , &og, &ob, &oa);
+
+	// setting up the draw color for the current drawing process
+	SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+
+	if (result != 0)
+	{
+		printf("SDL_Error -> %s\n", SDL_GetError());
+		exit(ERROR);
+	}
+
+	for (unsigned int x = 0; x < App.screen.width; x += cell_width)
+	{
+		for (unsigned int y = 0; y < App.screen.height; y += cell_height)
+		{
+			// TODO handle thickness & centering
+			for (int xi = 0; xi < cell_width; xi++)
+			{
+				int result = SDL_RenderDrawPoint(renderer, x + xi, y);
+				if (result != 0)
+				{
+					printf("SDL_Error -> %s\n", SDL_GetError());
+					exit(ERROR);
+				}
+			}
+
+			for (int yi = 0; yi < cell_height; yi++)
+			{
+				int result = SDL_RenderDrawPoint(renderer, x, y + yi);
+				if (result != 0)
+				{
+					printf("SDL_Error -> %s\n", SDL_GetError());
+					exit(ERROR);
+				}
+			}
+		}
+	}
+
+	// reset the renderer's draw color to the original draw color before calling this function
+	SDL_SetRenderDrawColor(renderer, or , og, ob, oa);
+}
+
+void render_cells(SDL_Renderer* renderer)
+{
+	//int cell_width = App.screen.width / columns;
+	//int cell_height = App.screen.height / rows;
+
+	// stores original drawing color
+	Uint8 or , og, ob, oa;
+	int result = SDL_GetRenderDrawColor(renderer, &or , &og, &ob, &oa);
+
+	if (result != 0)
+	{
+		printf("SDL_Error -> %s\n", SDL_GetError());
+		exit(ERROR);
+	}
+
+	for (unsigned int x = 0; x < App.screen.width; x++)
+	{
+		for (unsigned int y = 0; y < App.screen.height; y++)
+		{
+			// map x y to board cell location
+			int cell_x = imap(x, 0, App.screen.width, 0, board.columns);
+			int cell_y = imap(y, 0, App.screen.height, 0, board.rows);
+
+			struct Color* cell_color = &board.cells[cell_x][cell_y];
+			if (cell_color != NULL)
+			{
+				// setting up the draw color for the current cell drawing process
+				SDL_SetRenderDrawColor(renderer, cell_color->r, cell_color->g, cell_color->b, cell_color->a);
+				int result = SDL_RenderDrawPoint(renderer, x, y);
+				if (result != 0)
+				{
+					printf("SDL_Error -> %s\n", SDL_GetError());
+					exit(ERROR);
+				}
+			}
+		}
+	}
+
+	// reset the renderer's draw color
+	SDL_SetRenderDrawColor(renderer, or , og, ob, oa);
+}
 
 int main(int argc, char* argv[])
 {
@@ -217,10 +245,11 @@ int main(int argc, char* argv[])
 	srand(time(NULL)); // initialization. must only be called once!
 
 	/* 
+	- assigning memory to board.cells for storing the color of the cell in 2d space
 	- notice: calloc handles overflow :D 
 	- a way to check for overflow manually (if using malloc) 
 	       is: if(x > T_MAX / y) where x, y are dimensions and T_MAX is type max.
-	- note: always check that calloc actually succeeded!
+	- note: always check that malloc / calloc actually succeeded!
 	*/
 	board.cells = calloc(board.columns, sizeof(struct Color*));
 	if (!board.cells)
@@ -245,16 +274,26 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	for (int x = 0; x < board.columns; x++)
+	{
+		for (int y = 0; y < board.rows; y++)
+		{
+			board.cells[x][y] = (struct Color){ rand() % 256, rand() % 256, rand() % 256, 255};
+		}
+	}
+
 	while (App.running)
 	{
 		App.handle_events(&event);
 		SDL_RenderClear(App.screen.renderer);
 
 		// TODO List:
-		// render grid & cells of the board
+		// render grid
 		// abstract generic error handling code as it is repeated
+		// might have an memory leak ? 
 
-		render_grid(App.screen.renderer, 10, 2, 2, 255, 255, 255, 255);
+		render_cells(App.screen.renderer);
+		render_grid(App.screen.renderer, 3, RED);
 
 		SDL_RenderPresent(App.screen.renderer);
 	}

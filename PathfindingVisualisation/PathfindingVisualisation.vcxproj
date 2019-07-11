@@ -127,6 +127,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.c" />
+    <ClCompile Include="math_utils.c" />
     <ClCompile Include="string_utils.c" />
   </ItemGroup>
   <ItemGroup>
@@ -138,14 +139,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="errors.h" />
+    <ClInclude Include="math_utils.h" />
     <ClInclude Include="string_utils.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <CopyFileToFolders Include="..\..\..\..\Downloads\turtle.bmp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
-      <DestinationFolders Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)/assets/images/</DestinationFolders>
-    </CopyFileToFolders>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

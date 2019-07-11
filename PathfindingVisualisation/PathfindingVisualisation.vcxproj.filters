@@ -13,12 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\assets">
-      <UniqueIdentifier>{d8634f6f-d161-4e75-9d5e-86d493d411f2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\assets\images">
-      <UniqueIdentifier>{9e277bef-c211-4482-9bbc-d167372de402}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">
@@ -27,18 +21,21 @@
     <ClCompile Include="string_utils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="math_utils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="..\..\..\..\Downloads\SDL2-2.0.9-win32-x64(1)\SDL2.dll" />
-    <CopyFileToFolders Include="..\..\..\..\Downloads\turtle.bmp">
-      <Filter>Source Files\assets\images</Filter>
-    </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="errors.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="string_utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="math_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
