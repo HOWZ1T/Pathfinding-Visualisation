@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\map_images">
+      <UniqueIdentifier>{6de2c8d7-47f7-4daf-a0ac-1615549992cd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">
@@ -24,9 +27,24 @@
     <ClCompile Include="math_utils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="maps.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="..\..\..\..\Downloads\SDL2-2.0.9-win32-x64(1)\SDL2.dll" />
+    <CopyFileToFolders Include="..\..\..\..\Desktop\maps\map_1.bmp">
+      <Filter>Source Files\map_images</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\..\..\..\Desktop\maps\map_4.bmp">
+      <Filter>Source Files\map_images</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\..\..\..\Desktop\maps\map_2.bmp">
+      <Filter>Source Files\map_images</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\..\..\..\Desktop\maps\map_3.bmp">
+      <Filter>Source Files\map_images</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="errors.h">
@@ -36,6 +54,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="math_utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="maps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

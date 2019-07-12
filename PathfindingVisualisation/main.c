@@ -6,9 +6,11 @@
 
 #include "errors.h"
 #include "math_utils.h"
+#include "maps.h"
+#include "string_utils.h"
 
 #define SCREEN_W 800
-#define SCREEN_H 600
+#define SCREEN_H 800
 #define SCREEN_SCALE 1
 #define SCREEN_NAME "Prototype"
 
@@ -128,14 +130,13 @@ struct Color RED = { 255, 0, 0, 255 };
 struct Color GREEN = { 0, 255, 0, 255 };
 struct Color BLUE = { 0, 0, 255, 255 };
 
-
 struct {
 	unsigned int columns;
 	unsigned int rows;
 	struct Color** cells;
 } board = {
-	4,
-	4,
+	NULL,
+	NULL,
 	NULL
 };
 
@@ -231,24 +232,23 @@ void render_cells(SDL_Renderer* renderer)
 	SDL_SetRenderDrawColor(renderer, or , og, ob, oa);
 }
 
-int main(int argc, char* argv[])
+// initializes board data based on map
+void init_board_from_map(struct Map* map)
 {
-	App.init();
+	if (!map)
+	{
+		printf("Error! init_board_from_map received an empty map struct!\n");
+		exit(EMPTY_MAP_ERROR);
+	}
 
-	printf("app running...\n");
-	SDL_Event event;
+	board.columns = map->w;
+	board.rows = map->h;
 
-	SDL_SetRenderDrawColor(App.screen.renderer, 0, 0, 0, 255);
-
-	// sets up randomisation based on time.
-	// Avoid use for cryptography!
-	srand(time(NULL)); // initialization. must only be called once!
-
-	/* 
+	/*
 	- assigning memory to board.cells for storing the color of the cell in 2d space
-	- notice: calloc handles overflow :D 
-	- a way to check for overflow manually (if using malloc) 
-	       is: if(x > T_MAX / y) where x, y are dimensions and T_MAX is type max.
+	- notice: calloc handles overflow :D
+	- a way to check for overflow manually (if using malloc)
+		   is: if(x > T_MAX / y) where x, y are dimensions and T_MAX is type max.
 	- note: always check that malloc / calloc actually succeeded!
 	*/
 	board.cells = calloc(board.columns, sizeof(struct Color*));
@@ -259,7 +259,7 @@ int main(int argc, char* argv[])
 	}
 	for (unsigned int i = 0; i < board.columns; i++)
 	{
-		board.cells[i] = calloc(board.rows, sizeof(struct Color)); 
+		board.cells[i] = calloc(board.rows, sizeof(struct Color));
 		if (!board.cells[i])
 		{
 			// freeing allocated memory prior to the failure
@@ -274,13 +274,63 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	// inserting correct color into board based on the map data
 	for (int x = 0; x < board.columns; x++)
 	{
 		for (int y = 0; y < board.rows; y++)
 		{
-			board.cells[x][y] = (struct Color){ rand() % 256, rand() % 256, rand() % 256, 255};
+			int cell = map->cells[x][y];
+			if (!cell)
+			{
+				printf("Error! Malformed map! Attempted to access non-existent map cell!\n");
+				free_map(map);
+				exit(MALFORMED_MAP);
+			}
+
+			switch (cell)
+			{
+				case EMPTY:
+					board.cells[x][y] = BLACK;
+					break;
+
+				case START:
+					board.cells[x][y] = GREEN;
+					break;
+
+				case END:
+					board.cells[x][y] = RED;
+					break;
+
+				case OBSTACLE:
+					board.cells[x][y] = WHITE;
+					break;
+
+				default:
+					printf("Error! cell returned unexpected value!\n");
+					exit(MALFORMED_MAP);
+					break;
+			}
 		}
 	}
+}
+
+int main(int argc, char* argv[])
+{
+	App.init();
+
+	printf("app running...\n");
+	SDL_Event event;
+
+	SDL_SetRenderDrawColor(App.screen.renderer, 0, 0, 0, 255);
+
+	// sets up randomisation based on time.
+	// Avoid use for cryptography!
+	srand(time(NULL)); // initialization. must only be called once!
+
+	char* fp = concat(SDL_GetBasePath(), "map_images\\map_1.bmp");
+	printf("filepath: %s\n", fp);
+	struct Map* map = load_map_from_image(fp);
+	init_board_from_map(map);
 
 	while (App.running)
 	{
@@ -288,7 +338,7 @@ int main(int argc, char* argv[])
 		SDL_RenderClear(App.screen.renderer);
 
 		// TODO List:
-		// render grid
+		// render grid correctly
 		// abstract generic error handling code as it is repeated
 		// might have an memory leak ? 
 
@@ -298,7 +348,9 @@ int main(int argc, char* argv[])
 		SDL_RenderPresent(App.screen.renderer);
 	}
 
-	// freeing 2d array
+	// freeing allocated data
+	free_map(map);
+
 	for (unsigned int i = 0; i < board.columns; i++)
 	{
 		free(board.cells[i]);
