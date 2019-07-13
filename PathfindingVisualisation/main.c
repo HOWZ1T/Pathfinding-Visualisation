@@ -52,8 +52,10 @@ static struct {
 
 // implementing App methods
 void init(void) {
+	fflush(stdout);
 	printf("initializing app...\n");
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+		fflush(stdout);
 		printf("SDL error -> %s\n", SDL_GetError());
 		exit(INIT_ERROR);
 	}
@@ -75,21 +77,25 @@ void init(void) {
 	// checking that the window and renderer were actually created
 	if (App.screen.window == NULL)
 	{
+		fflush(stdout);
 		printf("SDLError -> %s\n", SDL_GetError());
 		exit(INIT_WINDOW_ERROR);
 	}
 
 	if (App.screen.renderer == NULL)
 	{
+		fflush(stdout);
 		printf("SDLError -> %s\n", SDL_GetError());
 		exit(INIT_RENDERER_ERROR);
 	}
 
 	App.running = SDL_TRUE;
+	fflush(stdout);
 	printf("initialized.\n");
 }
 
 void quit(void) {
+	fflush(stdout);
 	printf("quiting app...\n");
 
 	// freeing memory
@@ -135,8 +141,8 @@ struct {
 	unsigned int rows;
 	struct Color** cells;
 } board = {
-	NULL,
-	NULL,
+	0,
+	0,
 	NULL
 };
 
@@ -155,6 +161,7 @@ void render_grid(SDL_Renderer* renderer, int line_thickness, struct Color color)
 
 	if (result != 0)
 	{
+		fflush(stdout);
 		printf("SDL_Error -> %s\n", SDL_GetError());
 		exit(ERROR);
 	}
@@ -169,6 +176,7 @@ void render_grid(SDL_Renderer* renderer, int line_thickness, struct Color color)
 				int result = SDL_RenderDrawPoint(renderer, x + xi, y);
 				if (result != 0)
 				{
+					fflush(stdout);
 					printf("SDL_Error -> %s\n", SDL_GetError());
 					exit(ERROR);
 				}
@@ -179,6 +187,7 @@ void render_grid(SDL_Renderer* renderer, int line_thickness, struct Color color)
 				int result = SDL_RenderDrawPoint(renderer, x, y + yi);
 				if (result != 0)
 				{
+					fflush(stdout);
 					printf("SDL_Error -> %s\n", SDL_GetError());
 					exit(ERROR);
 				}
@@ -201,6 +210,7 @@ void render_cells(SDL_Renderer* renderer)
 
 	if (result != 0)
 	{
+		fflush(stdout);
 		printf("SDL_Error -> %s\n", SDL_GetError());
 		exit(ERROR);
 	}
@@ -221,6 +231,7 @@ void render_cells(SDL_Renderer* renderer)
 				int result = SDL_RenderDrawPoint(renderer, x, y);
 				if (result != 0)
 				{
+					fflush(stdout);
 					printf("SDL_Error -> %s\n", SDL_GetError());
 					exit(ERROR);
 				}
@@ -237,6 +248,7 @@ void init_board_from_map(struct Map* map)
 {
 	if (!map)
 	{
+		fflush(stdout);
 		printf("Error! init_board_from_map received an empty map struct!\n");
 		exit(EMPTY_MAP_ERROR);
 	}
@@ -251,9 +263,11 @@ void init_board_from_map(struct Map* map)
 		   is: if(x > T_MAX / y) where x, y are dimensions and T_MAX is type max.
 	- note: always check that malloc / calloc actually succeeded!
 	*/
+	// mem alloc causing C to hang ?! TODO
 	board.cells = calloc(board.columns, sizeof(struct Color*));
 	if (!board.cells)
 	{
+		fflush(stdout);
 		printf("Calloc failed to allocate memory for board.cells!\n");
 		exit(MEMORY_ALLOCATION_ERROR);
 	}
@@ -269,10 +283,12 @@ void init_board_from_map(struct Map* map)
 			}
 			free(board.cells);
 
+			fflush(stdout);
 			printf("Calloc failed to allocate memory for board[%d].cells!\n", i);
 			exit(MEMORY_ALLOCATION_ERROR);
 		}
 	}
+
 
 	// inserting correct color into board based on the map data
 	for (int x = 0; x < board.columns; x++)
@@ -289,26 +305,28 @@ void init_board_from_map(struct Map* map)
 
 			switch (cell)
 			{
-				case EMPTY:
-					board.cells[x][y] = BLACK;
-					break;
+			case EMPTY:
+				board.cells[x][y] = BLACK;
+				break;
 
-				case START:
-					board.cells[x][y] = GREEN;
-					break;
+			case START:
+				board.cells[x][y] = GREEN;
+				break;
 
-				case END:
-					board.cells[x][y] = RED;
-					break;
+			case END:
+				board.cells[x][y] = RED;
+				break;
 
-				case OBSTACLE:
-					board.cells[x][y] = WHITE;
-					break;
+			case OBSTACLE:
+				board.cells[x][y] = WHITE;
+				break;
 
-				default:
-					printf("Error! cell returned unexpected value!\n");
-					exit(MALFORMED_MAP);
-					break;
+			default:
+				fflush(stdout);
+				printf("Error! cell returned unexpected value!\n");
+				free_map(map);
+				exit(MALFORMED_MAP);
+				break;
 			}
 		}
 	}
@@ -318,6 +336,7 @@ int main(int argc, char* argv[])
 {
 	App.init();
 
+	fflush(stdout);
 	printf("app running...\n");
 	SDL_Event event;
 
@@ -328,9 +347,10 @@ int main(int argc, char* argv[])
 	srand(time(NULL)); // initialization. must only be called once!
 
 	char* fp = concat(SDL_GetBasePath(), "map_images\\map_1.bmp");
+	fflush(stdout);
 	printf("filepath: %s\n", fp);
 	struct Map* map = load_map_from_image(fp);
-	init_board_from_map(map);
+	init_board_from_map(map); // TODO DEBUG, this func causes app to hang
 
 	while (App.running)
 	{
@@ -358,6 +378,8 @@ int main(int argc, char* argv[])
 	free(board.cells);
 
 	App.quit();
+
+	fflush(stdout);
 	printf("app closed.\n");
 
 	return 0;

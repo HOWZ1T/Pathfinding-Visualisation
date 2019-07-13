@@ -1,6 +1,7 @@
 #pragma once
 #include <SDL.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "errors.h"
 
