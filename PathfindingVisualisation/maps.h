@@ -5,10 +5,10 @@
 
 #include "errors.h"
 
-#define EMPTY 0
-#define START 1
-#define END 2
-#define OBSTACLE 3
+#define EMPTY 1
+#define START 2
+#define END 3
+#define OBSTACLE 4
 
 struct Map
 {

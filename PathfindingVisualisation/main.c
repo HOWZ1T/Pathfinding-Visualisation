@@ -215,6 +215,8 @@ void render_cells(SDL_Renderer* renderer)
 		exit(ERROR);
 	}
 
+	int prev_cell_x = -1;
+	int prev_cell_y = -1;
 	for (unsigned int x = 0; x < App.screen.width; x++)
 	{
 		for (unsigned int y = 0; y < App.screen.height; y++)
@@ -263,7 +265,6 @@ void init_board_from_map(struct Map* map)
 		   is: if(x > T_MAX / y) where x, y are dimensions and T_MAX is type max.
 	- note: always check that malloc / calloc actually succeeded!
 	*/
-	// mem alloc causing C to hang ?! TODO
 	board.cells = calloc(board.columns, sizeof(struct Color*));
 	if (!board.cells)
 	{
@@ -350,7 +351,7 @@ int main(int argc, char* argv[])
 	fflush(stdout);
 	printf("filepath: %s\n", fp);
 	struct Map* map = load_map_from_image(fp);
-	init_board_from_map(map); // TODO DEBUG, this func causes app to hang
+	init_board_from_map(map);
 
 	while (App.running)
 	{
@@ -363,7 +364,7 @@ int main(int argc, char* argv[])
 		// might have an memory leak ? 
 
 		render_cells(App.screen.renderer);
-		render_grid(App.screen.renderer, 3, RED);
+		//render_grid(App.screen.renderer, 3, RED);
 
 		SDL_RenderPresent(App.screen.renderer);
 	}

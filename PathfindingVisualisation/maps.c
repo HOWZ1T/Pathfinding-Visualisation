@@ -48,6 +48,13 @@ SDL_Color convert_pixel_data_to_color(SDL_Surface* surface, Uint32 data)
 // returns NULL on failure
 struct Map* load_map_from_image(const char* filepath)
 {
+	struct Map* map_ptr = malloc(sizeof(struct Map));
+	if (!map_ptr)
+	{
+		printf("Failed to allocate memory for map!");
+		exit(MEMORY_ALLOCATION_ERROR);
+	}
+
 	int** cells;
 	int w, h;
 	int has_start = 0, has_end = 0;
@@ -154,7 +161,10 @@ struct Map* load_map_from_image(const char* filepath)
 	}
 
 	SDL_FreeSurface(surf); // surface is no longer needed, thus freeing it from memory
-	return &(struct Map) { cells, w, h };
+	map_ptr->cells = cells;
+	map_ptr->w = w;
+	map_ptr->h = h;
+	return map_ptr;
 }
 
 // frees the map struct and is internal data from memory
