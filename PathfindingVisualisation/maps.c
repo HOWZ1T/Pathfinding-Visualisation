@@ -36,8 +36,7 @@ SDL_Color convert_pixel_data_to_color(SDL_Surface* surface, Uint32 data)
 	SDL_GetRGB(data, surface->format, &rgb.r, &rgb.g, &rgb.b);
 	if (!&rgb)
 	{
-		fflush(stdout);
-		printf("Pixel to Color Conversion Error!\n");
+		println("Pixel to Color Conversion Error!");
 		exit(PIXEL_TO_COLOR_CONVERSION_ERROR);
 	}
 
@@ -46,12 +45,12 @@ SDL_Color convert_pixel_data_to_color(SDL_Surface* surface, Uint32 data)
 
 // loads a map from the specified image filepath
 // returns NULL on failure
-struct Map* load_map_from_image(const char* filepath)
+Map* load_map_from_image(const char* filepath)
 {
-	struct Map* map_ptr = malloc(sizeof(struct Map));
+	Map* map_ptr = malloc(sizeof(Map));
 	if (!map_ptr)
 	{
-		printf("Failed to allocate memory for map!");
+		println("Failed to allocate memory for map!");
 		exit(MEMORY_ALLOCATION_ERROR);
 	}
 
@@ -63,8 +62,7 @@ struct Map* load_map_from_image(const char* filepath)
 	SDL_Surface* surf = SDL_LoadBMP(filepath);
 	if (!surf)
 	{
-		fflush(stdout);
-		printf("SDL_Error -> %s\n", SDL_GetError());
+		println("SDL_Error -> %s", SDL_GetError());
 		exit(LOAD_IMAGE_ERROR);
 	}
 
@@ -74,8 +72,7 @@ struct Map* load_map_from_image(const char* filepath)
 	cells = calloc(w, sizeof(int*));
 	if (!cells)
 	{
-		fflush(stdout);
-		printf("Calloc failed to allocate memory for map cells!\n");
+		println("Calloc failed to allocate memory for map cells!");
 		SDL_FreeSurface(surf);
 		exit(MEMORY_ALLOCATION_ERROR);
 	}
@@ -91,8 +88,7 @@ struct Map* load_map_from_image(const char* filepath)
 			}
 			free(cells);
 
-			fflush(stdout);
-			printf("Calloc failed to allocate memory for map cells[%d]!\n", i);
+			println("Calloc failed to allocate memory for map cells[%d]!", i);
 			SDL_FreeSurface(surf);
 			exit(MEMORY_ALLOCATION_ERROR);
 		}
@@ -114,8 +110,7 @@ struct Map* load_map_from_image(const char* filepath)
 			{
 				if (!has_end) { has_end = 1; }
 				else {
-					fflush(stdout);
-					printf("WARNING: invalid map %s, has more than one ending point!\n", filepath);
+					println("WARNING: invalid map %s, has more than one ending point!", filepath);
 					SDL_FreeSurface(surf);
 					return NULL;
 				}
@@ -126,8 +121,7 @@ struct Map* load_map_from_image(const char* filepath)
 			{
 				if (!has_start) { has_start = 1; }
 				else {
-					fflush(stdout);
-					printf("WARNING: invalid map %s, has more than one starting point!\n", filepath);
+					println("WARNING: invalid map %s, has more than one starting point!", filepath);
 					SDL_FreeSurface(surf);
 					return NULL;
 				}
@@ -144,8 +138,7 @@ struct Map* load_map_from_image(const char* filepath)
 			}
 			else
 			{
-				fflush(stdout);
-				printf("WARNING: unknown color detected! Assuming empty cell and continuing...\n");
+				println("WARNING: unknown color detected! Assuming empty cell and continuing...");
 				cells[x][y] = EMPTY;
 			}
 		}
@@ -154,8 +147,7 @@ struct Map* load_map_from_image(const char* filepath)
 	// for a map to valid it must have an start and an end
 	if (!(has_start && has_end))
 	{
-		fflush(stdout);
-		printf("WARNING: invalid map %s, has no starting and/or ending point(s)!\n", filepath);
+		println("WARNING: invalid map %s, has no starting and/or ending point(s)!", filepath);
 		SDL_FreeSurface(surf);
 		return NULL;
 	}
@@ -168,7 +160,7 @@ struct Map* load_map_from_image(const char* filepath)
 }
 
 // frees the map struct and is internal data from memory
-void free_map(struct Map* map)
+void free_map(Map* map)
 {
 	for (int x = 0; x < map->w; x++)
 	{

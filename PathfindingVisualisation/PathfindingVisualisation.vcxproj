@@ -126,6 +126,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="agent.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="maps.c" />
     <ClCompile Include="math_utils.c" />
@@ -139,10 +140,13 @@
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="agent.h" />
+    <ClInclude Include="a_star.h" />
     <ClInclude Include="errors.h" />
     <ClInclude Include="maps.h" />
     <ClInclude Include="math_utils.h" />
     <ClInclude Include="string_utils.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="..\..\..\..\Desktop\maps\map_1.bmp">

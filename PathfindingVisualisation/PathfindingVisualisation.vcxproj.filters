@@ -30,6 +30,9 @@
     <ClCompile Include="maps.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="agent.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="..\..\..\..\Downloads\SDL2-2.0.9-win32-x64(1)\SDL2.dll" />
@@ -60,6 +63,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="maps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="agent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="a_star.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

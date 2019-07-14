@@ -8,6 +8,8 @@
 #include "math_utils.h"
 #include "maps.h"
 #include "string_utils.h"
+#include "utils.h"
+#include "agent.h"
 
 #define SCREEN_W 800
 #define SCREEN_H 800
@@ -53,10 +55,9 @@ static struct {
 // implementing App methods
 void init(void) {
 	fflush(stdout);
-	printf("initializing app...\n");
+	printf("initializing app...");
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-		fflush(stdout);
-		printf("SDL error -> %s\n", SDL_GetError());
+		println("SDL error -> %s", SDL_GetError());
 		exit(INIT_ERROR);
 	}
 
@@ -77,26 +78,22 @@ void init(void) {
 	// checking that the window and renderer were actually created
 	if (App.screen.window == NULL)
 	{
-		fflush(stdout);
-		printf("SDLError -> %s\n", SDL_GetError());
+		println("SDLError -> %s", SDL_GetError());
 		exit(INIT_WINDOW_ERROR);
 	}
 
 	if (App.screen.renderer == NULL)
 	{
-		fflush(stdout);
-		printf("SDLError -> %s\n", SDL_GetError());
+		println("SDLError -> %s", SDL_GetError());
 		exit(INIT_RENDERER_ERROR);
 	}
 
 	App.running = SDL_TRUE;
-	fflush(stdout);
-	printf("initialized.\n");
+	println("initialized.");
 }
 
 void quit(void) {
-	fflush(stdout);
-	printf("quiting app...\n");
+	println("quiting app...");
 
 	// freeing memory
 	SDL_DestroyRenderer(App.screen.renderer);
@@ -122,32 +119,22 @@ void handle_events(SDL_Event* event_ptr)
 	}
 }
 
-struct Color
-{
-	Uint8 r;
-	Uint8 g;
-	Uint8 b;
-	Uint8 a;
-};
-
-struct Color WHITE = { 255, 255, 255, 255 };
-struct Color BLACK = { 0, 0, 0, 255 };
-struct Color RED = { 255, 0, 0, 255 };
-struct Color GREEN = { 0, 255, 0, 255 };
-struct Color BLUE = { 0, 0, 255, 255 };
-
 struct {
 	unsigned int columns;
 	unsigned int rows;
-	struct Color** cells;
+	Color** cells;
 } board = {
 	0,
 	0,
 	NULL
 };
 
+Agent agent = {
+	0, 0, {0, 0, 255, 255}
+};
+
 // renders the play grid
-void render_grid(SDL_Renderer* renderer, int line_thickness, struct Color color)
+void render_grid(SDL_Renderer* renderer, int line_thickness, Color color)
 {
 	int cell_width = App.screen.width / board.columns;
 	int cell_height = App.screen.height / board.rows;
@@ -161,8 +148,7 @@ void render_grid(SDL_Renderer* renderer, int line_thickness, struct Color color)
 
 	if (result != 0)
 	{
-		fflush(stdout);
-		printf("SDL_Error -> %s\n", SDL_GetError());
+		println("SDL_Error -> %s", SDL_GetError());
 		exit(ERROR);
 	}
 
@@ -176,8 +162,7 @@ void render_grid(SDL_Renderer* renderer, int line_thickness, struct Color color)
 				int result = SDL_RenderDrawPoint(renderer, x + xi, y);
 				if (result != 0)
 				{
-					fflush(stdout);
-					printf("SDL_Error -> %s\n", SDL_GetError());
+					println("SDL_Error -> %s", SDL_GetError());
 					exit(ERROR);
 				}
 			}
@@ -187,8 +172,7 @@ void render_grid(SDL_Renderer* renderer, int line_thickness, struct Color color)
 				int result = SDL_RenderDrawPoint(renderer, x, y + yi);
 				if (result != 0)
 				{
-					fflush(stdout);
-					printf("SDL_Error -> %s\n", SDL_GetError());
+					println("SDL_Error -> %s", SDL_GetError());
 					exit(ERROR);
 				}
 			}
@@ -210,8 +194,7 @@ void render_cells(SDL_Renderer* renderer)
 
 	if (result != 0)
 	{
-		fflush(stdout);
-		printf("SDL_Error -> %s\n", SDL_GetError());
+		println("SDL_Error -> %s", SDL_GetError());
 		exit(ERROR);
 	}
 
@@ -225,17 +208,30 @@ void render_cells(SDL_Renderer* renderer)
 			int cell_x = imap(x, 0, App.screen.width, 0, board.columns);
 			int cell_y = imap(y, 0, App.screen.height, 0, board.rows);
 
-			struct Color* cell_color = &board.cells[cell_x][cell_y];
-			if (cell_color != NULL)
+			// controls switching between rendering the agent and the board
+			if (cell_x == agent.x && cell_y == agent.y)
 			{
-				// setting up the draw color for the current cell drawing process
-				SDL_SetRenderDrawColor(renderer, cell_color->r, cell_color->g, cell_color->b, cell_color->a);
+				SDL_SetRenderDrawColor(renderer, agent.color.r, agent.color.g, agent.color.b, agent.color.a);
 				int result = SDL_RenderDrawPoint(renderer, x, y);
 				if (result != 0)
 				{
-					fflush(stdout);
-					printf("SDL_Error -> %s\n", SDL_GetError());
+					println("SDL_Error -> %s", SDL_GetError());
 					exit(ERROR);
+				}
+			}
+			else
+			{
+				Color* cell_color = &board.cells[cell_x][cell_y];
+				if (cell_color != NULL)
+				{
+					// setting up the draw color for the current cell drawing process
+					SDL_SetRenderDrawColor(renderer, cell_color->r, cell_color->g, cell_color->b, cell_color->a);
+					int result = SDL_RenderDrawPoint(renderer, x, y);
+					if (result != 0)
+					{
+						println("SDL_Error -> %s", SDL_GetError());
+						exit(ERROR);
+					}
 				}
 			}
 		}
@@ -246,12 +242,11 @@ void render_cells(SDL_Renderer* renderer)
 }
 
 // initializes board data based on map
-void init_board_from_map(struct Map* map)
+void init_board_from_map(Map* map)
 {
 	if (!map)
 	{
-		fflush(stdout);
-		printf("Error! init_board_from_map received an empty map struct!\n");
+		println("Error! init_board_from_map received an empty map struct!");
 		exit(EMPTY_MAP_ERROR);
 	}
 
@@ -265,16 +260,15 @@ void init_board_from_map(struct Map* map)
 		   is: if(x > T_MAX / y) where x, y are dimensions and T_MAX is type max.
 	- note: always check that malloc / calloc actually succeeded!
 	*/
-	board.cells = calloc(board.columns, sizeof(struct Color*));
+	board.cells = calloc(board.columns, sizeof(Color*));
 	if (!board.cells)
 	{
-		fflush(stdout);
-		printf("Calloc failed to allocate memory for board.cells!\n");
+		println("Calloc failed to allocate memory for board.cells!");
 		exit(MEMORY_ALLOCATION_ERROR);
 	}
 	for (unsigned int i = 0; i < board.columns; i++)
 	{
-		board.cells[i] = calloc(board.rows, sizeof(struct Color));
+		board.cells[i] = calloc(board.rows, sizeof(Color));
 		if (!board.cells[i])
 		{
 			// freeing allocated memory prior to the failure
@@ -283,9 +277,7 @@ void init_board_from_map(struct Map* map)
 				free(board.cells[j]);
 			}
 			free(board.cells);
-
-			fflush(stdout);
-			printf("Calloc failed to allocate memory for board[%d].cells!\n", i);
+			println("Calloc failed to allocate memory for board[%d].cells!", i);
 			exit(MEMORY_ALLOCATION_ERROR);
 		}
 	}
@@ -299,7 +291,7 @@ void init_board_from_map(struct Map* map)
 			int cell = map->cells[x][y];
 			if (!cell)
 			{
-				printf("Error! Malformed map! Attempted to access non-existent map cell!\n");
+				println("Error! Malformed map! Attempted to access non-existent map cell!");
 				free_map(map);
 				exit(MALFORMED_MAP);
 			}
@@ -312,6 +304,8 @@ void init_board_from_map(struct Map* map)
 
 			case START:
 				board.cells[x][y] = GREEN;
+				agent.x = x;
+				agent.y = y;
 				break;
 
 			case END:
@@ -323,8 +317,7 @@ void init_board_from_map(struct Map* map)
 				break;
 
 			default:
-				fflush(stdout);
-				printf("Error! cell returned unexpected value!\n");
+				println("Error! cell returned unexpected value!");
 				free_map(map);
 				exit(MALFORMED_MAP);
 				break;
@@ -337,8 +330,7 @@ int main(int argc, char* argv[])
 {
 	App.init();
 
-	fflush(stdout);
-	printf("app running...\n");
+	println("app running...");
 	SDL_Event event;
 
 	SDL_SetRenderDrawColor(App.screen.renderer, 0, 0, 0, 255);
@@ -348,9 +340,7 @@ int main(int argc, char* argv[])
 	srand(time(NULL)); // initialization. must only be called once!
 
 	char* fp = concat(SDL_GetBasePath(), "map_images\\map_1.bmp");
-	fflush(stdout);
-	printf("filepath: %s\n", fp);
-	struct Map* map = load_map_from_image(fp);
+	Map* map = load_map_from_image(fp);
 	init_board_from_map(map);
 
 	while (App.running)
@@ -361,7 +351,7 @@ int main(int argc, char* argv[])
 		// TODO List:
 		// render grid correctly
 		// abstract generic error handling code as it is repeated
-		// might have an memory leak ? 
+		// abstract / macro printing code to fflush & \n for me
 
 		render_cells(App.screen.renderer);
 		//render_grid(App.screen.renderer, 3, RED);
@@ -380,8 +370,7 @@ int main(int argc, char* argv[])
 
 	App.quit();
 
-	fflush(stdout);
-	printf("app closed.\n");
+	println("app closed.");
 
 	return 0;
 }
